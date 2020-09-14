@@ -18,6 +18,7 @@
 
 <body>
   <main role="main" class="container mt-3">
+    <!-- Safari でも collapse を動作させるにはどうすればいいか? を実験するための card です。結論 style="cursor: pointer;" -->
     <div class="card">
       <div class="card-header font-weight-bold text-center" data-toggle="collapse" data-target="#collapse-target"
         aria-expanded="false" style="cursor: pointer;">
@@ -40,6 +41,7 @@
         Sample footer
       </div>
     </div>
+    <!-- button は最初から pointer だから? 何もしなくて OK。 -->
     <button class="btn btn-lg btn-primary" data-toggle="collapse" data-target="#collapse-target">
       Toggle with button
     </button>
