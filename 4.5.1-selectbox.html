@@ -225,7 +225,7 @@
       // 何度も呼び出される可能性を考慮し、 empty() します。
       $(selectIdentifier).empty();
       // 先頭の option は空欄にしています。
-      $(selectIdentifier).append($('<option>').html('').val(''));
+      $(selectIdentifier).append($('<option selected>').html('').val(''));
       for (let i = 0; i < optionValues.length; i++) {
         $(selectIdentifier).append($('<option>').html(optionTexts[i]).val(optionValues[i]));
       }
