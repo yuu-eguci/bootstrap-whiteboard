@@ -320,6 +320,53 @@
       initializeAutoFillHour('.auto-fill-hour');
       initializeAutoFillMinute('.auto-fill-minute');
 
+      // ↑これらの selectbox が最初に選択されるときは、現地時刻に合わせます。
+      // 最初の選択かどうかは「画面が開かれてから最初のクリックである」「現在の値が空欄である」で判断します。
+      const _isFirstClick = function (clickedElement) {
+        const ret = $(clickedElement).data('is-clicked-after-loaded') && $(clickedElement).val() === '';
+        $(clickedElement).data('is-clicked-after-loaded', false);
+        return ret;
+      };
+      $('.auto-fill-year').on('click', function () {
+        if (_isFirstClick(this)) {
+          const value = zeroPadding2(dateNow.getFullYear());
+          $(this).find(`option[value='${value}']`).prop('selected', true);
+          $(this).val(value).change();
+        }
+      });
+      $('.auto-fill-month').on('click', function () {
+        if (_isFirstClick(this)) {
+          const value = zeroPadding2(dateNow.getMonth() + 1);
+          $(this).find(`option[value='${value}']`).prop('selected', true);
+          $(this).val(value).change();
+        }
+      });
+      $('.auto-fill-date').on('click', function () {
+        // initializeAutoFillDate() によってすでに選択肢は埋まっているはずです。
+        // ただし条件が揃っていれば曜日も表示したいので、クリック時に曜日付き選択肢を生成します。
+        initializeAutoFillDateWithDayOfTheWeek(this);
+
+        if (_isFirstClick(this)) {
+          const value = zeroPadding2(dateNow.getDate());
+          $(this).find(`option[value='${value}']`).prop('selected', true);
+          $(this).val(value).change();
+        }
+      });
+      $('.auto-fill-hour').on('click', function () {
+        if (_isFirstClick(this)) {
+          const value = zeroPadding2(dateNow.getHours());
+          $(this).find(`option[value='${value}']`).prop('selected', true);
+          $(this).val(value).change();
+        }
+      });
+      $('.auto-fill-minute').on('click', function () {
+        if (_isFirstClick(this)) {
+          const value = zeroPadding2(dateNow.getMinutes());
+          $(this).find(`option[value='${value}']`).prop('selected', true);
+          $(this).val(value).change();
+        }
+      });
+
     };
 
     $(function () {
