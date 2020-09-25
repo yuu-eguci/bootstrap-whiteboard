@@ -213,9 +213,9 @@
         <!-- .auto-fill-date-only はセレクトボックスに変更があると自動で hidden input を埋めるクラスです。 -->
         <div class="form-row auto-fill-date-only">
           <div class="col-4 pr-0">
-            <div class="input-group">
+            <div class="input-group auto-fill-year">
               <!-- .auto-fill-year は .auto-fill... に対応し year を特定するクラスです。 -->
-              <select class="form-control auto-fill-year">
+              <select class="form-control">
               </select>
               <div class="input-group-append">
                 <span class="input-group-text">年</span>
@@ -223,9 +223,9 @@
             </div>
           </div>
           <div class="col-4 pl-0 pr-0">
-            <div class="input-group">
+            <div class="input-group auto-fill-month">
               <!-- .auto-fill-month は .auto-fill... に対応し month を特定するクラスです。 -->
-              <select class="form-control auto-fill-month">
+              <select class="form-control">
               </select>
               <div class="input-group-append">
                 <span class="input-group-text">月</span>
@@ -233,16 +233,16 @@
             </div>
           </div>
           <div class="col-4 pl-0">
-            <div class="input-group">
+            <div class="input-group auto-fill-date">
               <!-- .auto-fill-date は .auto-fill... に対応し date を特定するクラスです。 -->
-              <select class="form-control auto-fill-date">
+              <select class="form-control">
               </select>
               <div class="input-group-append">
                 <span class="input-group-text">日</span>
               </div>
             </div>
           </div>
-          <input type="text" value="2008/03/01" disabled>
+          <input type="text" value="2018/03/01" disabled>
         </div>
       </div>
       <div class="form-group col-md-4">
@@ -250,9 +250,9 @@
         <!-- .auto-fill-month-only はセレクトボックスに変更があると自動で hidden input を埋めるクラスです。 -->
         <div class="form-row auto-fill-month-only">
           <div class="col-6 pr-0">
-            <div class="input-group">
+            <div class="input-group auto-fill-year">
               <!-- .auto-fill-year は .auto-fill... に対応し year を特定するクラスです。 -->
-              <select class="form-control auto-fill-year">
+              <select class="form-control">
               </select>
               <div class="input-group-append">
                 <span class="input-group-text">年</span>
@@ -260,16 +260,16 @@
             </div>
           </div>
           <div class="col-6 pl-0 pr-0">
-            <div class="input-group">
+            <div class="input-group auto-fill-month">
               <!-- .auto-fill-month は .auto-fill... に対応し month を特定するクラスです。 -->
-              <select class="form-control auto-fill-month">
+              <select class="form-control">
               </select>
               <div class="input-group-append">
                 <span class="input-group-text">月</span>
               </div>
             </div>
           </div>
-          <input type="text" value="2008/05" disabled>
+          <input type="text" value="2018/05" disabled>
         </div>
       </div>
       <div class="form-group col-md-4">
@@ -277,9 +277,9 @@
         <!-- .auto-fill-time-only はセレクトボックスに変更があると自動で hidden input を埋めるクラスです。 -->
         <div class="form-row auto-fill-time-only">
           <div class="col-6 pr-0">
-            <div class="input-group">
+            <div class="input-group auto-fill-hour">
               <!-- .auto-fill-hour は .auto-fill... に対応し hour を特定するクラスです。 -->
-              <select class="form-control auto-fill-hour">
+              <select class="form-control">
               </select>
               <div class="input-group-append">
                 <span class="input-group-text">時</span>
@@ -287,9 +287,9 @@
             </div>
           </div>
           <div class="col-6 pl-0">
-            <div class="input-group">
+            <div class="input-group auto-fill-minute">
               <!-- .auto-fill-minute は .auto-fill... に対応し minute を特定するクラスです。 -->
-              <select class="form-control auto-fill-minute">
+              <select class="form-control">
               </select>
               <div class="input-group-append">
                 <span class="input-group-text">分</span>
@@ -332,33 +332,65 @@
       $('.auto-fill-minute select').each(function () { foo(this); });
     };
 
+    // 何かと使う Date オブジェクトを初期化しておきます。
+    const dateNow = new Date();
+
+    // ゼロ埋め2桁です。
+    const zeroPadding2 = function (obj) {
+      return obj.toString().padStart(2, '0');
+    };
+
     const _initializeSelectbox = function (selectIdentifier, optionValues, optionTexts, defaultValue) {
       console.info('Selectbox 初期化します。');
+      if (!defaultValue) {
+        defaultValue = '';
+      }
+      // 何度も呼び出される可能性を考慮し、 empty() します。
+      $(selectIdentifier).empty();
+      // 先頭の option は空欄にしています。
+      $(selectIdentifier).append($('<option>').html('').val(''));
+      for (let i = 0; i < optionValues.length; i++) {
+        $(selectIdentifier).append($('<option>').html(optionTexts[i]).val(optionValues[i]));
+      }
+      // NOTE: 下記2点の機能をセレクトボックスに与えるため、用意した data 属性です。
+      // - セレクトボックス未選択時、最初のクリックでは現在日時をセットしたい。
+      // - その後に未選択を選択することも可能にしたい。
+      // この data 属性なしでは、空欄を意図的に選択することができません。
+      $(selectIdentifier).data('is-clicked-after-loaded', true);
+      // defaultValue を select の value 値に設定します。
+      $(selectIdentifier).val(defaultValue).change();
+      // Selmodal 化します。
+      $(selectIdentifier).selModal();
     };
 
-    const initializeAutoFillYear = function () {
+    const initializeAutoFillYear = function (defaultValue) {
       console.info('AutoFillYear 初期化します。');
-      _initializeSelectbox();
+      // NOTE: 年の候補は3年前～3年後にしてみます。
+      let threeYearsAgoYear = dateNow.getFullYear() - 4;
+      const optionValues = [...Array(7).keys()].map(i => ++threeYearsAgoYear);
+      _initializeSelectbox($('.auto-fill-year select'), optionValues, optionValues, defaultValue);
     };
 
-    const initializeAutoFillMonth = function () {
+    const initializeAutoFillMonth = function (defaultValue) {
       console.info('AutoFillMonth 初期化します。');
-      _initializeSelectbox();
+      const optionValues = [...Array(12).keys()].map(i => zeroPadding2(++i));
+      _initializeSelectbox('.auto-fill-month select', optionValues, optionValues, defaultValue);
     };
 
-    const initializeAutoFillDate = function () {
+    const initializeAutoFillDate = function (defaultValue) {
       console.info('AutoFillDate 初期化します。');
-      _initializeSelectbox();
     };
 
-    const initializeAutoFillHour = function () {
+    const initializeAutoFillHour = function (defaultValue) {
       console.info('AutoFillHour 初期化します。');
-      _initializeSelectbox();
+      const optionValues = [...Array(24).keys()].map(i => zeroPadding2(i));
+      _initializeSelectbox('.auto-fill-hour select', optionValues, optionValues, defaultValue);
     };
 
-    const initializeAutoFillMinute = function () {
+    const initializeAutoFillMinute = function (defaultValue) {
       console.info('AutoFillMinute 初期化します。');
-      _initializeSelectbox();
+      const optionValues = [...Array(24).keys()].map(i => zeroPadding2(i));
+      _initializeSelectbox('.auto-fill-minute select', optionValues, optionValues, defaultValue);
     };
 
     const reflectHiddenInputToSelectboxesForAutoFillSelectboxes = function () {
@@ -377,10 +409,10 @@
       // selmodal 用の name 属性を自動付与します。
       setNameAttributesForSelmodal();
 
-      // select.auto-fill-year, -month, -date, -hour, -minute を初期化します。
+      // select.auto-fill-year, -month, -hour, -minute を初期化します。
+      // NOTE: date については onclick 時に初期化します。年月によって変化するためです。
       initializeAutoFillYear();
       initializeAutoFillMonth();
-      initializeAutoFillDate();
       initializeAutoFillHour();
       initializeAutoFillMinute();
 
