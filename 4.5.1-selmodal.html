@@ -383,6 +383,48 @@
       $('.auto-fill-date select').selModal();
     };
 
+    const initializeAutoFillDateWithDayOfTheWeek = function (autoFillDateOnlyElement, defaultValue) {
+      console.info('AutoFillDate 曜日つきで初期化します。');
+      const selectYear = autoFillDateOnlyElement.find('.auto-fill-year select');
+      const selectMonth = autoFillDateOnlyElement.find('.auto-fill-month select');
+      const selectDate = autoFillDateOnlyElement.find('.auto-fill-date select');
+      const yyyy = selectYear.val();
+      const mm = selectMonth.val();
+      console.info(yyyy, mm);
+      if (yyyy && mm) {
+        // OK. 曜日取得が可能なので続行します。
+      } else {
+        // 年月が選択されていないときは曜日を表示しようがありません。
+        const optionValues = [...Array(31).keys()].map(i => zeroPadding2(++i));
+        _initializeSelectbox(selectDate, optionValues, optionValues, defaultValue);
+        return;
+      }
+      // すでにこの年月の options が作成されている場合、再度作成する必要はありません。
+      // NOTE: このチェックがないと、「date 選択のためクリック」->「options 初期化」->「選択がリセット」されてしまいます。
+      if (selectDate.data('year') + selectDate.data('month') === yyyy + mm) {
+        return;
+      }
+
+      const optionValues = [];
+      const optionTextsWithDayOfTheWeek = [];
+      // NOTE: Date において month は 0 スタートです。
+      const dateOfSpecificYearMonth = new Date(Number(yyyy), Number(mm) - 1, 1);
+      for (let i = 1; i < 32; i++) {
+        const optionValue = zeroPadding2(i);
+        dateOfSpecificYearMonth.setDate(Number(optionValue));
+        // NOTE: 月を跨いだら終了します。 30, 31日のない月への対応です。 2020/02 が閏月です。(確認用メモ)
+        if (dateOfSpecificYearMonth.getMonth() + 1 !== Number(mm)) {
+          break;
+        }
+        optionValues.push(optionValue);
+        optionTextsWithDayOfTheWeek.push(`${optionValue} (${'日月火水木金土'[dateOfSpecificYearMonth.getDay()]})`);
+      }
+      // data-year, data-month を付与し、このセレクトボックスだけ見れば「何年何月の date 一覧なのか」わかるようにします。
+      selectDate.data('year', yyyy);
+      selectDate.data('month', mm);
+      _initializeSelectbox(selectDate, optionValues, optionTextsWithDayOfTheWeek, defaultValue);
+    };
+
     const initializeAutoFillHour = function (defaultValue) {
       console.info('AutoFillHour 初期化します。');
       const optionValues = [...Array(24).keys()].map(i => zeroPadding2(i));
@@ -409,6 +451,9 @@
       });
       $('.auto-fill-date button.selModalButton').on('click', function () {
         console.info('on click date');
+        const autoFillDateOnlyElement = $(this).closest('.auto-fill-date-only');
+        initializeAutoFillDateWithDayOfTheWeek(autoFillDateOnlyElement);
+        autoFillDateOnlyElement.find('.auto-fill-date button.selModalButton').click();
       });
       $('.auto-fill-hour button.selModalButton').on('click', function () {
         console.info('on click hour');
