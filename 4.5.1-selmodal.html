@@ -390,7 +390,6 @@
       const selectDate = autoFillDateOnlyElement.find('.auto-fill-date select');
       const yyyy = selectYear.val();
       const mm = selectMonth.val();
-      console.info(yyyy, mm);
       if (yyyy && mm) {
         // OK. 曜日取得が可能なので続行します。
       } else {
@@ -443,35 +442,32 @@
 
     const registerOnClickEventsForAutoFillSelectboxes = function () {
       console.info('onclick イベントを登録します。');
-      $('.auto-fill-year button.selModalButton').on('click', function () {
+      $(document).on('click', '.auto-fill-year button.selModalButton', function () {
         console.info('on click year');
       });
-      $('.auto-fill-month button.selModalButton').on('click', function () {
+      $(document).on('click', '.auto-fill-month button.selModalButton', function () {
         console.info('on click month');
       });
-      $('.auto-fill-date button.selModalButton').on('click', function () {
+      $(document).on('click', '.auto-fill-date button.selModalButton', function () {
         console.info('on click date');
-        const autoFillDateOnlyElement = $(this).closest('.auto-fill-date-only');
-        initializeAutoFillDateWithDayOfTheWeek(autoFillDateOnlyElement);
-        autoFillDateOnlyElement.find('.auto-fill-date button.selModalButton').click();
       });
-      $('.auto-fill-hour button.selModalButton').on('click', function () {
+      $(document).on('click', '.auto-fill-hour button.selModalButton', function () {
         console.info('on click hour');
       });
-      $('.auto-fill-minute button.selModalButton').on('click', function () {
+      $(document).on('click', '.auto-fill-minute button.selModalButton', function () {
         console.info('on click minute');
       });
     };
 
     const registerOnChangeEventsForAutoFillSelectboxes = function () {
       console.info('onchange イベントを登録します。');
-      $('.auto-fill-date-only select').on('change', function () {
+      $(document).on('change', '.auto-fill-date-only select', function () {
         console.info('on change date-only');
       });
-      $('.auto-fill-month-only select').on('change', function () {
+      $(document).on('change', '.auto-fill-month-only select', function () {
         console.info('on change month-only');
       });
-      $('.auto-fill-time-only select').on('change', function () {
+      $(document).on('change', '.auto-fill-time-only select', function () {
         console.info('on change time-only');
       });
     };
