@@ -72,30 +72,7 @@
 			//ボタンクリック
 			$('[data-selmodalbtn="' + sel_name_attr + '"]').click(function(){
 		
-				href = $('[data-selmodal="' + $(this).data('selmodalbtn') + '"]');
-				
-				$(href).show();
-				$('body').addClass('selModalBody');
-				
-				var par_height = $(href).find('.selModalInner').outerHeight();
-				var c_head = $(href).find('.selModalHeader').outerHeight();
-				$(href).find('.selModalList').css('height', (par_height - c_head) + 'px');
-				
-				var pos = 0;
-				var tr = 0;
-				$(href).find('.selModalList ul li').each(function(key, value){
-					if($(value).hasClass('selected')){
-						tr = $(value).outerHeight(true);
-						return false;
-					}else{
-						pos += $(value).outerHeight(true);
-					}
-				});
-				
-				var sh = $(href).find('.selModalList').height();
-				if(sh > 0) pos -= (sh / 2);
-				if(tr > 0) pos += (tr / 2);
-				$(href).find('.selModalList').scrollTop(pos);
+				$(this).openSelModal();
 			});
 			
 			$('[data-selmodal="' + sel_name_attr + '"]').find('.selModalList').on('touchstart', function(){
@@ -149,6 +126,34 @@
 		sel_list.find('li').removeClass('selected');
 		sel_list.find('[data-value="' + value + '"]').addClass('selected');
 		sel_btn.text(sel_text);
+	}
+
+	$.fn.openSelModal = function(){
+		href = $('[data-selmodal="' + $(this).data('selmodalbtn') + '"]');
+		console.info(this);
+
+		$(href).show();
+		$('body').addClass('selModalBody');
+
+		var par_height = $(href).find('.selModalInner').outerHeight();
+		var c_head = $(href).find('.selModalHeader').outerHeight();
+		$(href).find('.selModalList').css('height', (par_height - c_head) + 'px');
+
+		var pos = 0;
+		var tr = 0;
+		$(href).find('.selModalList ul li').each(function (key, value) {
+			if ($(value).hasClass('selected')) {
+				tr = $(value).outerHeight(true);
+				return false;
+			} else {
+				pos += $(value).outerHeight(true);
+			}
+		});
+
+		var sh = $(href).find('.selModalList').height();
+		if (sh > 0) pos -= (sh / 2);
+		if (tr > 0) pos += (tr / 2);
+		$(href).find('.selModalList').scrollTop(pos);
 	}
 
 })(jQuery);
