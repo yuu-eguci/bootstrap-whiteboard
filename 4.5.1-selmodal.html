@@ -320,6 +320,16 @@
   <script>
     const setNameAttributesForSelmodal = function () {
       console.info('selmodal 用の name 属性を自動付与します。');
+      // selmodal 利用のための name 属性を設定します。
+      const foo = function (identifier) {
+        // NOTE: ミリ秒 + ランダム数値 です。
+        $(identifier).prop('name', 'selmodal-' + new Date().getTime().toString(16) + Math.floor(1000 * Math.random()).toString(16));
+      };
+      $('.auto-fill-year select').each(function () { foo(this); });
+      $('.auto-fill-month select').each(function () { foo(this); });
+      $('.auto-fill-date select').each(function () { foo(this); });
+      $('.auto-fill-hour select').each(function () { foo(this); });
+      $('.auto-fill-minute select').each(function () { foo(this); });
     };
 
     const _initializeSelectbox = function (selectIdentifier, optionValues, optionTexts, defaultValue) {
