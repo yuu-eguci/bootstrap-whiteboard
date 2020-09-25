@@ -318,6 +318,71 @@
   <script src="js/Jquery.selmodal.js"></script>
 
   <script>
+    const setNameAttributesForSelmodal = function () {
+      console.info('selmodal 用の name 属性を自動付与します。');
+    };
+
+    const _initializeSelectbox = function (selectIdentifier, optionValues, optionTexts, defaultValue) {
+      console.info('Selectbox 初期化します。');
+    };
+
+    const initializeAutoFillYear = function () {
+      console.info('AutoFillYear 初期化します。');
+      _initializeSelectbox();
+    };
+
+    const initializeAutoFillMonth = function () {
+      console.info('AutoFillMonth 初期化します。');
+      _initializeSelectbox();
+    };
+
+    const initializeAutoFillDate = function () {
+      console.info('AutoFillDate 初期化します。');
+      _initializeSelectbox();
+    };
+
+    const initializeAutoFillHour = function () {
+      console.info('AutoFillHour 初期化します。');
+      _initializeSelectbox();
+    };
+
+    const initializeAutoFillMinute = function () {
+      console.info('AutoFillMinute 初期化します。');
+      _initializeSelectbox();
+    };
+
+    const reflectHiddenInputToSelectboxesForAutoFillSelectboxes = function () {
+      console.info('input の状態を selectbox へ反映させます。');
+    };
+
+    const registerOnClickEventsForAutoFillSelectboxes = function () {
+      console.info('onclick イベントを登録します。');
+    };
+
+    const registerOnChangeEventsForAutoFillSelectboxes = function () {
+      console.info('onchange イベントを登録します。');
+    };
+
+    $(function () {
+      // selmodal 用の name 属性を自動付与します。
+      setNameAttributesForSelmodal();
+
+      // select.auto-fill-year, -month, -date, -hour, -minute を初期化します。
+      initializeAutoFillYear();
+      initializeAutoFillMonth();
+      initializeAutoFillDate();
+      initializeAutoFillHour();
+      initializeAutoFillMinute();
+
+      // input の状態を selectbox へ反映させます。
+      reflectHiddenInputToSelectboxesForAutoFillSelectboxes();
+
+      // select.auto-fill-year, -month, -date, -hour, -minute に onclick イベントを登録します。
+      registerOnClickEventsForAutoFillSelectboxes();
+
+      // select.auto-fill-year, -month, -date, -hour, -minute に onchange イベントを登録します。
+      registerOnChangeEventsForAutoFillSelectboxes();
+    });
   </script>
 </body>
 
