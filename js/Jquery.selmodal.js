@@ -57,9 +57,9 @@
 			modal_html += '</div>';	
 		    
 			if(selected_name === undefined){
-				button_html = '<button type="button" class="selModalButton" data-selmodalbtn="' + sel_name_attr + '">' + sel_default_text + '</button>';
+				button_html = '<button type="button" class="selModalButton form-control" data-selmodalbtn="' + sel_name_attr + '">' + sel_default_text + '</button>';
 			}else{
-				button_html = '<button type="button" class="selModalButton" data-selmodalbtn="' + sel_name_attr + '">' + selected_name + '</button>';
+				button_html = '<button type="button" class="selModalButton form-control" data-selmodalbtn="' + sel_name_attr + '">' + selected_name + '</button>';
 			}
 	
 		    // 元のセレクトボックスは非表示
