@@ -379,6 +379,8 @@
 
     const initializeAutoFillDate = function (defaultValue) {
       console.info('AutoFillDate 初期化します。');
+      // NOTE: date については onclick 時に options を初期化します。年月によって変化するためです。
+      $('.auto-fill-date select').selModal();
     };
 
     const initializeAutoFillHour = function (defaultValue) {
@@ -433,10 +435,10 @@
       // selmodal 用の name 属性を自動付与します。
       setNameAttributesForSelmodal();
 
-      // select.auto-fill-year, -month, -hour, -minute を初期化します。
-      // NOTE: date については onclick 時に初期化します。年月によって変化するためです。
+      // select.auto-fill-year, -month, -date, -hour, -minute を初期化します。
       initializeAutoFillYear();
       initializeAutoFillMonth();
+      initializeAutoFillDate();
       initializeAutoFillHour();
       initializeAutoFillMinute();
 

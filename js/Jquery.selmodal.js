@@ -24,7 +24,7 @@
 			var selected_name; 
 			var modal_html = '';
 			var button_html = '';
-			var sel_default_text = '選択してください。';
+			var sel_default_text = '';
 			
 			$('[data-selmodal="' + sel_name_attr + '"]').remove();
 			$('[data-selmodalbtn="' + sel_name_attr + '"]').remove();
