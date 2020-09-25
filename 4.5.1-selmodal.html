@@ -450,6 +450,8 @@
       });
       $(document).on('click', '.auto-fill-date button.selModalButton', function () {
         console.info('on click date');
+        initializeAutoFillDateWithDayOfTheWeek($(this).closest('.auto-fill-date-only'));
+        $(this).openSelModal();
       });
       $(document).on('click', '.auto-fill-hour button.selModalButton', function () {
         console.info('on click hour');
