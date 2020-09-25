@@ -243,19 +243,24 @@
   <script>
     // Selectbox を初期化します。
     // NOTE: 日付や時刻の auto fill のために用意した関数です。
-    const _initializeSelectbox = function (selectIdentifier, optionValues, optionTexts) {
+    const _initializeSelectbox = function (selectIdentifier, optionValues, optionTexts, defaultValue) {
+      if (!defaultValue) {
+        defaultValue = '';
+      }
       // 何度も呼び出される可能性を考慮し、 empty() します。
       $(selectIdentifier).empty();
       // 先頭の option は空欄にしています。
-      $(selectIdentifier).append($('<option selected>').html('').val(''));
+      $(selectIdentifier).append($(`<option${defaultValue === '' ? ' selected' : ''}>`).html('').val(''));
       for (let i = 0; i < optionValues.length; i++) {
-        $(selectIdentifier).append($('<option>').html(optionTexts[i]).val(optionValues[i]));
+        $(selectIdentifier).append($(`<option${defaultValue === optionValues[i] ? ' selected' : ''}>`).html(optionTexts[i]).val(optionValues[i]));
       }
       // NOTE: 下記2点の機能をセレクトボックスに与えるため、用意した data 属性です。
       // - セレクトボックス未選択時、最初のクリックでは現在日時をセットしたい。
       // - その後に未選択を選択することも可能にしたい。
       // この data 属性なしでは、空欄を意図的に選択することができません。
       $(selectIdentifier).data('is-clicked-after-loaded', true);
+      // defaultValue を select の value 値に設定します。
+      $(selectIdentifier).val(defaultValue).change();
     };
 
     // 何かと使う Date オブジェクトを初期化しておきます。
@@ -266,26 +271,26 @@
       return obj.toString().padStart(2, '0');
     };
 
-    const initializeAutoFillYear = function (selectIdentifier) {
+    const initializeAutoFillYear = function (selectIdentifier, defaultValue) {
       // NOTE: 年の候補は3年前～3年後にしてみます。
       let threeYearsAgoYear = dateNow.getFullYear() - 4;
       const optionValues = [...Array(7).keys()].map(i => ++threeYearsAgoYear);
-      _initializeSelectbox(selectIdentifier, optionValues, optionValues);
+      _initializeSelectbox(selectIdentifier, optionValues, optionValues, defaultValue);
     };
 
-    const initializeAutoFillMonth = function (selectIdentifier) {
+    const initializeAutoFillMonth = function (selectIdentifier, defaultValue) {
       const optionValues = [...Array(12).keys()].map(i => zeroPadding2(++i));
-      _initializeSelectbox(selectIdentifier, optionValues, optionValues);
+      _initializeSelectbox(selectIdentifier, optionValues, optionValues, defaultValue);
     };
 
-    const initializeAutoFillDate = function (selectIdentifier) {
+    const initializeAutoFillDate = function (selectIdentifier, defaultValue) {
       const optionValues = [...Array(31).keys()].map(i => zeroPadding2(++i));
       // NOTE: 年月が選択されていないときは曜日を表示しようがありません 。
-      _initializeSelectbox(selectIdentifier, optionValues, optionValues);
+      _initializeSelectbox(selectIdentifier, optionValues, optionValues, defaultValue);
     };
 
     // UX 向上のため、曜日も表示します。もちろん年月が選択されているときに限ります。
-    const initializeAutoFillDateWithDayOfTheWeek = function (clickedSelectbox) {
+    const initializeAutoFillDateWithDayOfTheWeek = function (clickedSelectbox, defaultValue) {
       const p = $(clickedSelectbox).closest('.auto-fill-date-only');
       const yyyy = p.find('.auto-fill-year').val();
       const mm = p.find('.auto-fill-month').val();
@@ -320,17 +325,17 @@
       // data-year, data-month を付与し、このセレクトボックスだけ見れば「何年何月の date 一覧なのか」わかるようにします。
       $(clickedSelectbox).data('year', yyyy);
       $(clickedSelectbox).data('month', mm);
-      _initializeSelectbox(clickedSelectbox, optionValues, optionTextsWithDayOfTheWeek);
+      _initializeSelectbox(clickedSelectbox, optionValues, optionTextsWithDayOfTheWeek, defaultValue);
     };
 
-    const initializeAutoFillHour = function (selectIdentifier) {
+    const initializeAutoFillHour = function (selectIdentifier, defaultValue) {
       const optionValues = [...Array(24).keys()].map(i => zeroPadding2(i));
-      _initializeSelectbox(selectIdentifier, optionValues, optionValues);
+      _initializeSelectbox(selectIdentifier, optionValues, optionValues, defaultValue);
     };
 
-    const initializeAutoFillMinute = function (selectIdentifier) {
+    const initializeAutoFillMinute = function (selectIdentifier, defaultValue) {
       const optionValues = [...Array(60).keys()].map(i => zeroPadding2(i));
-      _initializeSelectbox(selectIdentifier, optionValues, optionValues);
+      _initializeSelectbox(selectIdentifier, optionValues, optionValues, defaultValue);
     };
 
     const initializeSelectboxesForDateTime = function () {
@@ -352,40 +357,35 @@
       $('.auto-fill-year').on('click', function () {
         if (_isFirstClick(this)) {
           const value = zeroPadding2(dateNow.getFullYear());
-          $(this).find(`option[value='${value}']`).prop('selected', true);
-          $(this).val(value).change();
+          initializeAutoFillYear(this, value);
         }
       });
       $('.auto-fill-month').on('click', function () {
         if (_isFirstClick(this)) {
           const value = zeroPadding2(dateNow.getMonth() + 1);
-          $(this).find(`option[value='${value}']`).prop('selected', true);
-          $(this).val(value).change();
+          initializeAutoFillMonth(this, value);
         }
       });
       $('.auto-fill-date').on('click', function () {
-        // initializeAutoFillDate() によってすでに選択肢は埋まっているはずです。
-        // ただし条件が揃っていれば曜日も表示したいので、クリック時に曜日付き選択肢を生成します。
-        initializeAutoFillDateWithDayOfTheWeek(this);
-
         if (_isFirstClick(this)) {
           const value = zeroPadding2(dateNow.getDate());
-          $(this).find(`option[value='${value}']`).prop('selected', true);
-          $(this).val(value).change();
+          initializeAutoFillDateWithDayOfTheWeek(this, value);
+        } else {
+          // initializeAutoFillDate() によってすでに選択肢は埋まっているはずです。
+          // ただし条件が揃っていれば曜日も表示したいので、クリック時に曜日付き選択肢を生成します。
+          initializeAutoFillDateWithDayOfTheWeek(this);
         }
       });
       $('.auto-fill-hour').on('click', function () {
         if (_isFirstClick(this)) {
           const value = zeroPadding2(dateNow.getHours());
-          $(this).find(`option[value='${value}']`).prop('selected', true);
-          $(this).val(value).change();
+          initializeAutoFillHour(this, value);
         }
       });
       $('.auto-fill-minute').on('click', function () {
         if (_isFirstClick(this)) {
           const value = zeroPadding2(dateNow.getMinutes());
-          $(this).find(`option[value='${value}']`).prop('selected', true);
-          $(this).val(value).change();
+          initializeAutoFillMinute(this, value);
         }
       });
 
