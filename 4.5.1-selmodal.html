@@ -383,19 +383,12 @@
       $('.auto-fill-date select').selModal();
     };
 
-    const initializeAutoFillDateWithDayOfTheWeek = function (autoFillDateOnlyElement, defaultValue) {
+    const initializeAutoFillDateWithDayOfTheWeek = function (yyyy, mm, selectDate, defaultValue) {
       console.info('AutoFillDate 曜日つきで初期化します。');
-      const selectYear = $(autoFillDateOnlyElement).find('.auto-fill-year select');
-      const selectMonth = $(autoFillDateOnlyElement).find('.auto-fill-month select');
-      const selectDate = $(autoFillDateOnlyElement).find('.auto-fill-date select');
-      const yyyy = selectYear.val();
-      const mm = selectMonth.val();
       if (yyyy && mm) {
         // OK. 曜日取得が可能なので続行します。
       } else {
         // 年月が選択されていないときは曜日を表示しようがありません。
-        const optionValues = [...Array(31).keys()].map(i => zeroPadding2(++i));
-        _initializeSelectbox(selectDate, optionValues, optionValues, defaultValue);
         return;
       }
       // すでにこの年月の options が作成されている場合、再度作成する必要はありません。
@@ -403,7 +396,6 @@
       if (selectDate.data('year') + selectDate.data('month') === yyyy + mm) {
         return;
       }
-
       const optionValues = [];
       const optionTextsWithDayOfTheWeek = [];
       // NOTE: Date において month は 0 スタートです。
@@ -454,8 +446,7 @@
         selectboxYear.selModalSetValue($(input).val().slice(0, 4));
         selectboxMonth.selModalSetValue($(input).val().slice(5, 7));
         // ↑年月を選択したので、曜日が取得できます。
-        initializeAutoFillDateWithDayOfTheWeek(p);
-        selectboxDate.selModalSetValue($(input).val().slice(8));
+        initializeAutoFillDateWithDayOfTheWeek($(input).val().slice(0, 4), $(input).val().slice(5, 7), $(p).find('.auto-fill-date select'), $(input).val().slice(8));
         // ↓以下も同様の処理です。
       }
       for (const p of $('.auto-fill-month-only')) {
@@ -484,24 +475,48 @@
       }
     };
 
+    const getNeighborSelect = function (identifier) {
+      return $(identifier).parent().find('select');
+    };
+
     const registerOnClickEventsForAutoFillSelectboxes = function () {
       console.info('onclick イベントを登録します。');
+      const _isFirstClick = function (clickedButton) {
+        const neighborSelect = getNeighborSelect(clickedButton);
+        const ret = $(neighborSelect).data('is-clicked-after-loaded') && $(neighborSelect).val() === '';
+        $(clickedButton).data('is-clicked-after-loaded', false);
+        return ret;
+      };
       $(document).on('click', '.auto-fill-year button.selModalButton', function () {
         console.info('on click year');
+        if (_isFirstClick(this)) {
+          $(getNeighborSelect(this)).selModalSetValue(dateNow.getFullYear().toString());
+          $(getNeighborSelect(this)).change();
+        }
       });
       $(document).on('click', '.auto-fill-month button.selModalButton', function () {
         console.info('on click month');
+        if (_isFirstClick(this)) {
+          $(getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getMonth() + 1));
+          $(getNeighborSelect(this)).change();
+        }
       });
       $(document).on('click', '.auto-fill-date button.selModalButton', function () {
         console.info('on click date');
-        initializeAutoFillDateWithDayOfTheWeek($(this).closest('.auto-fill-date-only'));
-        $(this).openSelModal();
       });
       $(document).on('click', '.auto-fill-hour button.selModalButton', function () {
         console.info('on click hour');
+        if (_isFirstClick(this)) {
+          $(getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getHours()));
+          $(getNeighborSelect(this)).change();
+        }
       });
       $(document).on('click', '.auto-fill-minute button.selModalButton', function () {
         console.info('on click minute');
+        if (_isFirstClick(this)) {
+          $(getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getMinutes()));
+          $(getNeighborSelect(this)).change();
+        }
       });
     };
 
@@ -509,6 +524,25 @@
       console.info('onchange イベントを登録します。');
       $(document).on('change', '.auto-fill-date-only select', function () {
         console.info('on change date-only');
+        // 親 form-row です。この中に年月日が含まれます。
+        const p = $(this).closest('.auto-fill-date-only');
+        if ($(this).val()) {
+          // 各値です。
+          const yyyy = p.find('.auto-fill-year select').val() || dateNow.getFullYear().toString();
+          const mm = p.find('.auto-fill-month select').val() || zeroPadding2(dateNow.getMonth() + 1);
+          const dd = p.find('.auto-fill-date select').val() || zeroPadding2(dateNow.getDate());
+          p.find('.auto-fill-year select').selModalSetValue(yyyy);
+          p.find('.auto-fill-month select').selModalSetValue(mm);
+          initializeAutoFillDateWithDayOfTheWeek(yyyy, mm, p.find('.auto-fill-date select'), dd);
+          // hidden input を埋めます。
+          p.find('input').val(`${yyyy}/${mm}/${dd}`).change();
+          return;
+        }
+        // 空値が選ばれたときは hidden input も空欄にしたいと判断します。
+        p.find('.auto-fill-year select').selModalSetValue('');
+        p.find('.auto-fill-month select').selModalSetValue('');
+        p.find('.auto-fill-date select').selModalSetValue('');
+        p.find('input').val('').change();
       });
       $(document).on('change', '.auto-fill-month-only select', function () {
         console.info('on change month-only');
