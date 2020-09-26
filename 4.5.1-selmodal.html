@@ -546,9 +546,39 @@
       });
       $(document).on('change', '.auto-fill-month-only select', function () {
         console.info('on change month-only');
+        const p = $(this).closest('.auto-fill-month-only');
+        if ($(this).val()) {
+          // 各値です。
+          const yyyy = p.find('.auto-fill-year select').val() || dateNow.getFullYear().toString();
+          const mm = p.find('.auto-fill-month select').val() || zeroPadding2(dateNow.getMonth() + 1);
+          p.find('.auto-fill-year select').selModalSetValue(yyyy);
+          p.find('.auto-fill-month select').selModalSetValue(mm);
+          // hidden input を埋めます。
+          p.find('input').val(`${yyyy}/${mm}`).change();
+          return;
+        }
+        // 空値が選ばれたときは hidden input も空欄にしたいと判断します。
+        p.find('.auto-fill-year select').selModalSetValue('');
+        p.find('.auto-fill-month select').selModalSetValue('');
+        p.find('input').val('').change();
       });
       $(document).on('change', '.auto-fill-time-only select', function () {
         console.info('on change time-only');
+        const p = $(this).closest('.auto-fill-time-only');
+        if ($(this).val()) {
+          // 各値です。
+          const hh = p.find('.auto-fill-hour select').val() || zeroPadding2(dateNow.getHours());
+          const mm = p.find('.auto-fill-minute select').val() || zeroPadding2(dateNow.getMinutes());
+          p.find('.auto-fill-hour select').selModalSetValue(hh);
+          p.find('.auto-fill-minute select').selModalSetValue(mm);
+          // hidden input を埋めます。
+          p.find('input').val(`${hh}:${mm}`).change();
+          return;
+        }
+        // 空値が選ばれたときは hidden input も空欄にしたいと判断します。
+        p.find('.auto-fill-hour select').selModalSetValue('');
+        p.find('.auto-fill-minute select').selModalSetValue('');
+        p.find('input').val('').change();
       });
     };
 
