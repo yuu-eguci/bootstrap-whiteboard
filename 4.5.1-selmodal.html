@@ -358,7 +358,7 @@
       // この data 属性なしでは、空欄を意図的に選択することができません。
       $(selectIdentifier).data('is-clicked-after-loaded', true);
       // defaultValue を select の value 値に設定します。
-      $(selectIdentifier).val(defaultValue).change();
+      $(selectIdentifier).val(defaultValue);
       // Selmodal 化します。
       $(selectIdentifier).selModal();
     };
@@ -380,7 +380,7 @@
     const initializeAutoFillDate = function (defaultValue) {
       console.info('AutoFillDate 初期化します。');
       // NOTE: date については onclick 時に options を初期化します。年月によって変化するためです。
-      $('.auto-fill-date select').selModal();
+      _initializeSelectbox('.auto-fill-date select', [], [], defaultValue);
     };
 
     const initializeAutoFillDateWithDayOfTheWeek = function (yyyy, mm, selectDate, defaultValue) {
@@ -389,11 +389,6 @@
         // OK. 曜日取得が可能なので続行します。
       } else {
         // 年月が選択されていないときは曜日を表示しようがありません。
-        return;
-      }
-      // すでにこの年月の options が作成されている場合、再度作成する必要はありません。
-      // NOTE: このチェックがないと、「date 選択のためクリック」->「options 初期化」->「選択がリセット」されてしまいます。
-      if (selectDate.data('year') + selectDate.data('month') === yyyy + mm) {
         return;
       }
       const optionValues = [];
@@ -410,9 +405,6 @@
         optionValues.push(optionValue);
         optionTextsWithDayOfTheWeek.push(`${optionValue} (${'日月火水木金土'[dateOfSpecificYearMonth.getDay()]})`);
       }
-      // data-year, data-month を付与し、このセレクトボックスだけ見れば「何年何月の date 一覧なのか」わかるようにします。
-      selectDate.data('year', yyyy);
-      selectDate.data('month', mm);
       _initializeSelectbox(selectDate, optionValues, optionTextsWithDayOfTheWeek, defaultValue);
     };
 
@@ -443,10 +435,13 @@
           continue;
         }
         // 値がある -> Selectbox でその値を select
-        selectboxYear.selModalSetValue($(input).val().slice(0, 4));
-        selectboxMonth.selModalSetValue($(input).val().slice(5, 7));
+        const yyyy = $(input).val().slice(0, 4);
+        const mm = $(input).val().slice(5, 7);
+        const dd = $(input).val().slice(8);
+        selectboxYear.selModalSetValue(yyyy);
+        selectboxMonth.selModalSetValue(mm);
         // ↑年月を選択したので、曜日が取得できます。
-        initializeAutoFillDateWithDayOfTheWeek($(input).val().slice(0, 4), $(input).val().slice(5, 7), $(p).find('.auto-fill-date select'), $(input).val().slice(8));
+        initializeAutoFillDateWithDayOfTheWeek(yyyy, mm, selectboxDate, dd);
         // ↓以下も同様の処理です。
       }
       for (const p of $('.auto-fill-month-only')) {
@@ -475,14 +470,13 @@
       }
     };
 
-    const getNeighborSelect = function (identifier) {
-      return $(identifier).parent().find('select');
-    };
-
     const registerOnClickEventsForAutoFillSelectboxes = function () {
       console.info('onclick イベントを登録します。');
+      const _getNeighborSelect = function (identifier) {
+        return $(identifier).parent().find('select');
+      };
       const _isFirstClick = function (clickedButton) {
-        const neighborSelect = getNeighborSelect(clickedButton);
+        const neighborSelect = _getNeighborSelect(clickedButton);
         const ret = $(neighborSelect).data('is-clicked-after-loaded') && $(neighborSelect).val() === '';
         $(clickedButton).data('is-clicked-after-loaded', false);
         return ret;
@@ -490,15 +484,15 @@
       $(document).on('click', '.auto-fill-year button.selModalButton', function () {
         console.info('on click year');
         if (_isFirstClick(this)) {
-          $(getNeighborSelect(this)).selModalSetValue(dateNow.getFullYear().toString());
-          $(getNeighborSelect(this)).change();
+          $(_getNeighborSelect(this)).selModalSetValue(dateNow.getFullYear().toString());
+          $(_getNeighborSelect(this)).change();
         }
       });
       $(document).on('click', '.auto-fill-month button.selModalButton', function () {
         console.info('on click month');
         if (_isFirstClick(this)) {
-          $(getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getMonth() + 1));
-          $(getNeighborSelect(this)).change();
+          $(_getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getMonth() + 1));
+          $(_getNeighborSelect(this)).change();
         }
       });
       $(document).on('click', '.auto-fill-date button.selModalButton', function () {
@@ -507,15 +501,15 @@
       $(document).on('click', '.auto-fill-hour button.selModalButton', function () {
         console.info('on click hour');
         if (_isFirstClick(this)) {
-          $(getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getHours()));
-          $(getNeighborSelect(this)).change();
+          $(_getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getHours()));
+          $(_getNeighborSelect(this)).change();
         }
       });
       $(document).on('click', '.auto-fill-minute button.selModalButton', function () {
         console.info('on click minute');
         if (_isFirstClick(this)) {
-          $(getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getMinutes()));
-          $(getNeighborSelect(this)).change();
+          $(_getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getMinutes()));
+          $(_getNeighborSelect(this)).change();
         }
       });
     };
@@ -526,59 +520,69 @@
         console.info('on change date-only');
         // 親 form-row です。この中に年月日が含まれます。
         const p = $(this).closest('.auto-fill-date-only');
+        const selectYear = p.find('.auto-fill-year select');
+        const selectMonth = p.find('.auto-fill-month select');
+        const selectDate = p.find('.auto-fill-date select');
+        const input = p.find('input');
         if ($(this).val()) {
           // 各値です。
-          const yyyy = p.find('.auto-fill-year select').val() || dateNow.getFullYear().toString();
-          const mm = p.find('.auto-fill-month select').val() || zeroPadding2(dateNow.getMonth() + 1);
-          const dd = p.find('.auto-fill-date select').val() || zeroPadding2(dateNow.getDate());
-          p.find('.auto-fill-year select').selModalSetValue(yyyy);
-          p.find('.auto-fill-month select').selModalSetValue(mm);
-          initializeAutoFillDateWithDayOfTheWeek(yyyy, mm, p.find('.auto-fill-date select'), dd);
+          const yyyy = selectYear.val() || dateNow.getFullYear().toString();
+          const mm = selectMonth.val() || zeroPadding2(dateNow.getMonth() + 1);
+          const dd = selectDate.val() || zeroPadding2(dateNow.getDate());
+          selectYear.selModalSetValue(yyyy);
+          selectMonth.selModalSetValue(mm);
+          initializeAutoFillDateWithDayOfTheWeek(yyyy, mm, selectDate, dd);
           // hidden input を埋めます。
-          p.find('input').val(`${yyyy}/${mm}/${dd}`).change();
+          input.val(`${yyyy}/${mm}/${dd}`).change();
           return;
         }
         // 空値が選ばれたときは hidden input も空欄にしたいと判断します。
-        p.find('.auto-fill-year select').selModalSetValue('');
-        p.find('.auto-fill-month select').selModalSetValue('');
-        p.find('.auto-fill-date select').selModalSetValue('');
-        p.find('input').val('').change();
+        selectYear.selModalSetValue('');
+        selectMonth.selModalSetValue('');
+        selectDate.selModalSetValue('');
+        input.val('').change();
       });
       $(document).on('change', '.auto-fill-month-only select', function () {
         console.info('on change month-only');
         const p = $(this).closest('.auto-fill-month-only');
+        const selectYear = p.find('.auto-fill-year select');
+        const selectMonth = p.find('.auto-fill-month select');
+        const input = p.find('input');
         if ($(this).val()) {
           // 各値です。
-          const yyyy = p.find('.auto-fill-year select').val() || dateNow.getFullYear().toString();
-          const mm = p.find('.auto-fill-month select').val() || zeroPadding2(dateNow.getMonth() + 1);
-          p.find('.auto-fill-year select').selModalSetValue(yyyy);
-          p.find('.auto-fill-month select').selModalSetValue(mm);
+          const yyyy = selectYear.val() || dateNow.getFullYear().toString();
+          const mm = selectMonth.val() || zeroPadding2(dateNow.getMonth() + 1);
+          selectYear.selModalSetValue(yyyy);
+          selectMonth.selModalSetValue(mm);
           // hidden input を埋めます。
-          p.find('input').val(`${yyyy}/${mm}`).change();
+          input.val(`${yyyy}/${mm}`).change();
           return;
         }
         // 空値が選ばれたときは hidden input も空欄にしたいと判断します。
-        p.find('.auto-fill-year select').selModalSetValue('');
-        p.find('.auto-fill-month select').selModalSetValue('');
-        p.find('input').val('').change();
+        selectYear.selModalSetValue('');
+        selectMonth.selModalSetValue('');
+        input.val('').change();
       });
       $(document).on('change', '.auto-fill-time-only select', function () {
         console.info('on change time-only');
         const p = $(this).closest('.auto-fill-time-only');
+        const selectHour = p.find('.auto-fill-hour select');
+        const selectMinute = p.find('.auto-fill-minute select');
+        const input = p.find('input');
         if ($(this).val()) {
           // 各値です。
-          const hh = p.find('.auto-fill-hour select').val() || zeroPadding2(dateNow.getHours());
-          const mm = p.find('.auto-fill-minute select').val() || zeroPadding2(dateNow.getMinutes());
-          p.find('.auto-fill-hour select').selModalSetValue(hh);
-          p.find('.auto-fill-minute select').selModalSetValue(mm);
+          const hh = selectHour.val() || zeroPadding2(dateNow.getHours());
+          const mm = selectMinute.val() || zeroPadding2(dateNow.getMinutes());
+          selectHour.selModalSetValue(hh);
+          selectMinute.selModalSetValue(mm);
           // hidden input を埋めます。
-          p.find('input').val(`${hh}:${mm}`).change();
+          input.val(`${hh}:${mm}`).change();
           return;
         }
         // 空値が選ばれたときは hidden input も空欄にしたいと判断します。
-        p.find('.auto-fill-hour select').selModalSetValue('');
-        p.find('.auto-fill-minute select').selModalSetValue('');
-        p.find('input').val('').change();
+        selectHour.selModalSetValue('');
+        selectMinute.selModalSetValue('');
+        input.val('').change();
       });
     };
 
