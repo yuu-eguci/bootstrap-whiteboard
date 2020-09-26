@@ -385,9 +385,9 @@
 
     const initializeAutoFillDateWithDayOfTheWeek = function (autoFillDateOnlyElement, defaultValue) {
       console.info('AutoFillDate 曜日つきで初期化します。');
-      const selectYear = autoFillDateOnlyElement.find('.auto-fill-year select');
-      const selectMonth = autoFillDateOnlyElement.find('.auto-fill-month select');
-      const selectDate = autoFillDateOnlyElement.find('.auto-fill-date select');
+      const selectYear = $(autoFillDateOnlyElement).find('.auto-fill-year select');
+      const selectMonth = $(autoFillDateOnlyElement).find('.auto-fill-month select');
+      const selectDate = $(autoFillDateOnlyElement).find('.auto-fill-date select');
       const yyyy = selectYear.val();
       const mm = selectMonth.val();
       if (yyyy && mm) {
@@ -438,6 +438,50 @@
 
     const reflectHiddenInputToSelectboxesForAutoFillSelectboxes = function () {
       console.info('input の状態を selectbox へ反映させます。');
+      for (const p of $('.auto-fill-date-only')) {
+        const selectboxYear = $(p).find('.auto-fill-year select');
+        const selectboxMonth = $(p).find('.auto-fill-month select');
+        const selectboxDate = $(p).find('.auto-fill-date select');
+        const input = $(p).find('input');
+        // Disabled 状態を同期します。
+        selectboxYear.prop('disabled', $(input).prop('disabled'));
+        selectboxMonth.prop('disabled', $(input).prop('disabled'));
+        selectboxDate.prop('disabled', $(input).prop('disabled'));
+        if (!$(input).val()) {
+          continue;
+        }
+        // 値がある -> Selectbox でその値を select
+        selectboxYear.selModalSetValue($(input).val().slice(0, 4));
+        selectboxMonth.selModalSetValue($(input).val().slice(5, 7));
+        // ↑年月を選択したので、曜日が取得できます。
+        initializeAutoFillDateWithDayOfTheWeek(p);
+        selectboxDate.selModalSetValue($(input).val().slice(8));
+        // ↓以下も同様の処理です。
+      }
+      for (const p of $('.auto-fill-month-only')) {
+        const selectboxYear = $(p).find('.auto-fill-year select');
+        const selectboxMonth = $(p).find('.auto-fill-month select');
+        const input = $(p).find('input');
+        selectboxYear.prop('disabled', $(input).prop('disabled'));
+        selectboxMonth.prop('disabled', $(input).prop('disabled'));
+        if (!$(input).val()) {
+          continue;
+        }
+        selectboxYear.selModalSetValue($(input).val().slice(0, 4));
+        selectboxMonth.selModalSetValue($(input).val().slice(5));
+      }
+      for (const p of $('.auto-fill-time-only')) {
+        const selectboxHour = $(p).find('.auto-fill-hour select');
+        const selectboxMinute = $(p).find('.auto-fill-minute select');
+        const input = $(p).find('input');
+        selectboxHour.prop('disabled', $(input).prop('disabled'));
+        selectboxMinute.prop('disabled', $(input).prop('disabled'));
+        if (!$(input).val()) {
+          continue;
+        }
+        selectboxHour.selModalSetValue($(input).val().slice(0, 2));
+        selectboxMinute.selModalSetValue($(input).val().slice(3));
+      }
     };
 
     const registerOnClickEventsForAutoFillSelectboxes = function () {
