@@ -432,7 +432,7 @@
 
     const initializeAutoFillMinute = function (defaultValue) {
       console.info('AutoFillMinute 初期化します。');
-      const optionValues = [...Array(24).keys()].map(i => zeroPadding2(i));
+      const optionValues = [...Array(60).keys()].map(i => zeroPadding2(i));
       _initializeSelectbox('.auto-fill-minute select', optionValues, optionValues, defaultValue);
     };
 

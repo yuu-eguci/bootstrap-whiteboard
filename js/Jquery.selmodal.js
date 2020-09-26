@@ -130,7 +130,6 @@
 
 	$.fn.openSelModal = function(){
 		href = $('[data-selmodal="' + $(this).data('selmodalbtn') + '"]');
-		console.info(this);
 
 		$(href).show();
 		$('body').addClass('selModalBody');
