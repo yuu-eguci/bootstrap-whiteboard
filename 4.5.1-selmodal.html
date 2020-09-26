@@ -422,15 +422,18 @@
 
     const reflectHiddenInputToSelectboxesForAutoFillSelectboxes = function () {
       console.info('input の状態を selectbox へ反映させます。');
+      const _getNeighborButton = function (identifier) {
+        return $(identifier).parent().find('button.selModalButton');
+      };
       for (const p of $('.auto-fill-date-only')) {
         const selectboxYear = $(p).find('.auto-fill-year select');
         const selectboxMonth = $(p).find('.auto-fill-month select');
         const selectboxDate = $(p).find('.auto-fill-date select');
         const input = $(p).find('input');
         // Disabled 状態を同期します。
-        selectboxYear.prop('disabled', $(input).prop('disabled'));
-        selectboxMonth.prop('disabled', $(input).prop('disabled'));
-        selectboxDate.prop('disabled', $(input).prop('disabled'));
+        $(_getNeighborButton(selectboxYear)).prop('disabled', $(input).prop('disabled'));
+        $(_getNeighborButton(selectboxMonth)).prop('disabled', $(input).prop('disabled'));
+        $(_getNeighborButton(selectboxDate)).prop('disabled', $(input).prop('disabled'));
         if (!$(input).val()) {
           continue;
         }
@@ -440,16 +443,17 @@
         const dd = $(input).val().slice(8);
         selectboxYear.selModalSetValue(yyyy);
         selectboxMonth.selModalSetValue(mm);
-        // ↑年月を選択したので、曜日が取得できます。
+        // ↑年月を選択したので、曜日が取得できます。ここでボタンが再生性されるため disabled をつけなおす必要があります。
         initializeAutoFillDateWithDayOfTheWeek(yyyy, mm, selectboxDate, dd);
+        $(_getNeighborButton(selectboxDate)).prop('disabled', $(input).prop('disabled'));
         // ↓以下も同様の処理です。
       }
       for (const p of $('.auto-fill-month-only')) {
         const selectboxYear = $(p).find('.auto-fill-year select');
         const selectboxMonth = $(p).find('.auto-fill-month select');
         const input = $(p).find('input');
-        selectboxYear.prop('disabled', $(input).prop('disabled'));
-        selectboxMonth.prop('disabled', $(input).prop('disabled'));
+        $(_getNeighborButton(selectboxYear)).prop('disabled', $(input).prop('disabled'));
+        $(_getNeighborButton(selectboxMonth)).prop('disabled', $(input).prop('disabled'));
         if (!$(input).val()) {
           continue;
         }
@@ -460,8 +464,8 @@
         const selectboxHour = $(p).find('.auto-fill-hour select');
         const selectboxMinute = $(p).find('.auto-fill-minute select');
         const input = $(p).find('input');
-        selectboxHour.prop('disabled', $(input).prop('disabled'));
-        selectboxMinute.prop('disabled', $(input).prop('disabled'));
+        $(_getNeighborButton(selectboxHour)).prop('disabled', $(input).prop('disabled'));
+        $(_getNeighborButton(selectboxMinute)).prop('disabled', $(input).prop('disabled'));
         if (!$(input).val()) {
           continue;
         }
