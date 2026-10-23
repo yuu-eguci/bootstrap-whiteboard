@@ -7,16 +7,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
   <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.1/css/bootstrap.min.css"
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.1/dist/css/bootstrap.min.css"
     integrity="sha384-VCmXjywReHh4PwowAiWNagnWcLhlEJLA5buUprzK8rxFgeH0kww/aWY76TfkUoSX" crossorigin="anonymous">
 
   <!-- Font awesome -->
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.14.0/css/all.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.14.0/css/all.css"
+    integrity="sha384-2u5nxrarE67xPTypS69k1tpTaYbAYZFApdwSbK4AnaNcmMWDf+b0GgCHRQaPPP17" crossorigin="anonymous">
 
   <!-- selmodal -->
   <link rel="stylesheet" href="css/selmodal.css">
 
-  <title>Bootstrap 4.5.1 - selectbox</title>
+  <title>Bootstrap 4.5.1 - selmodal</title>
 </head>
 
 <body>
@@ -310,24 +311,26 @@
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
     integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
     crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.1/js/bootstrap.min.js"
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.1/dist/js/bootstrap.min.js"
     integrity="sha384-XEerZL0cuoUbHE4nZReLT7nx9gQrQreJekYhJD9WNWhH8nEW+0c5qq7aIo2Wl30J"
     crossorigin="anonymous"></script>
 
   <!-- selmodal -->
   <script src="js/Jquery.selmodal.js"></script>
+  <script src="js/auto-fill-date.js"></script>
 
   <script>
     const setNameAttributesForSelmodal = function () {
       console.info('selmodal 用の name 属性を自動付与します。');
       // selmodal 利用のための name 属性を設定します。
+      const nextName = AutoFillDate.createNameGenerator('selmodal-');
       const foo = function (identifier) {
         // すでに name 属性があればスキップします。既存の name を消す必要はありません。
         if ($(identifier).prop('name')) {
           return;
         }
-        // NOTE: ミリ秒 + ランダム数値 です。
-        $(identifier).prop('name', 'selmodal-' + new Date().getTime().toString(16) + Math.floor(1000 * Math.random()).toString(16));
+        // NOTE: ページ内で重複しないよう連番です。
+        $(identifier).prop('name', nextName());
       };
       $('.auto-fill-year select').each(function () { foo(this); });
       $('.auto-fill-month select').each(function () { foo(this); });
@@ -336,13 +339,7 @@
       $('.auto-fill-minute select').each(function () { foo(this); });
     };
 
-    // 何かと使う Date オブジェクトを初期化しておきます。
-    const dateNow = new Date();
-
-    // ゼロ埋め2桁です。
-    const zeroPadding2 = function (obj) {
-      return obj.toString().padStart(2, '0');
-    };
+    const zeroPadding2 = AutoFillDate.zeroPadding2;
 
     const _initializeSelectbox = function (selectIdentifier, optionValues, optionTexts, defaultValue) {
       console.info('Selectbox 初期化します。');
@@ -352,9 +349,9 @@
       // 何度も呼び出される可能性を考慮し、 empty() します。
       $(selectIdentifier).empty();
       // 先頭の option は空欄にしています。
-      $(selectIdentifier).append($('<option>').html('').val(''));
+      $(selectIdentifier).append($('<option>').val(''));
       for (let i = 0; i < optionValues.length; i++) {
-        $(selectIdentifier).append($('<option>').html(optionTexts[i]).val(optionValues[i]));
+        $(selectIdentifier).append($('<option>').text(optionTexts[i]).val(optionValues[i]));
       }
       // NOTE: 下記2点の機能をセレクトボックスに与えるため、用意した data 属性です。
       // - セレクトボックス未選択時、最初のクリックでは現在日時をセットしたい。
@@ -369,21 +366,23 @@
 
     const initializeAutoFillYear = function (defaultValue) {
       console.info('AutoFillYear 初期化します。');
-      // NOTE: 年の候補は3年前～3年後にしてみます。
-      let threeYearsAgoYear = dateNow.getFullYear() - 4;
-      const optionValues = [...Array(7).keys()].map(i => ++threeYearsAgoYear);
+      // NOTE: 年の候補は3年前～3年後と、入力済みの年です。
+      const prefilledYears = $('.auto-fill-date-only input, .auto-fill-month-only input').map(function () {
+        return $(this).val().slice(0, 4);
+      }).get();
+      const optionValues = AutoFillDate.buildYearOptions(new Date().getFullYear(), prefilledYears).map(String);
       _initializeSelectbox($('.auto-fill-year select'), optionValues, optionValues, defaultValue);
     };
 
     const initializeAutoFillMonth = function (defaultValue) {
       console.info('AutoFillMonth 初期化します。');
-      const optionValues = [...Array(12).keys()].map(i => zeroPadding2(++i));
+      const optionValues = [...Array(12).keys()].map(i => zeroPadding2(i + 1));
       _initializeSelectbox('.auto-fill-month select', optionValues, optionValues, defaultValue);
     };
 
     const initializeAutoFillDate = function (defaultValue) {
       console.info('AutoFillDate 初期化します。');
-      // NOTE: date については onclick 時に options を初期化します。年月によって変化するためです。
+      // NOTE: date の options は年月の選択後に初期化します。年月によって変化するためです。
       _initializeSelectbox('.auto-fill-date select', [], [], defaultValue);
     };
 
@@ -395,21 +394,8 @@
         // 年月が選択されていないときは曜日を表示しようがありません。
         return;
       }
-      const optionValues = [];
-      const optionTextsWithDayOfTheWeek = [];
-      // NOTE: Date において month は 0 スタートです。
-      const dateOfSpecificYearMonth = new Date(Number(yyyy), Number(mm) - 1, 1);
-      for (let i = 1; i < 32; i++) {
-        const optionValue = zeroPadding2(i);
-        dateOfSpecificYearMonth.setDate(Number(optionValue));
-        // NOTE: 月を跨いだら終了します。 30, 31日のない月への対応です。 2020/02 が閏月です。(確認用メモ)
-        if (dateOfSpecificYearMonth.getMonth() + 1 !== Number(mm)) {
-          break;
-        }
-        optionValues.push(optionValue);
-        optionTextsWithDayOfTheWeek.push(`${optionValue} (${'日月火水木金土'[dateOfSpecificYearMonth.getDay()]})`);
-      }
-      _initializeSelectbox(selectDate, optionValues, optionTextsWithDayOfTheWeek, defaultValue);
+      const options = AutoFillDate.buildDateOptions(yyyy, mm);
+      _initializeSelectbox(selectDate, options.values, options.texts, defaultValue);
     };
 
     const initializeAutoFillHour = function (defaultValue) {
@@ -486,37 +472,34 @@
       const _isFirstClick = function (clickedButton) {
         const neighborSelect = _getNeighborSelect(clickedButton);
         const ret = $(neighborSelect).data('is-clicked-after-loaded') && $(neighborSelect).val() === '';
-        $(clickedButton).data('is-clicked-after-loaded', false);
+        $(neighborSelect).data('is-clicked-after-loaded', false);
         return ret;
       };
       $(document).on('click', '.auto-fill-year button.selModalButton', function () {
         console.info('on click year');
         if (_isFirstClick(this)) {
-          $(_getNeighborSelect(this)).selModalSetValue(dateNow.getFullYear().toString());
+          $(_getNeighborSelect(this)).selModalSetValue(new Date().getFullYear().toString());
           $(_getNeighborSelect(this)).change();
         }
       });
       $(document).on('click', '.auto-fill-month button.selModalButton', function () {
         console.info('on click month');
         if (_isFirstClick(this)) {
-          $(_getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getMonth() + 1));
+          $(_getNeighborSelect(this)).selModalSetValue(zeroPadding2(new Date().getMonth() + 1));
           $(_getNeighborSelect(this)).change();
         }
-      });
-      $(document).on('click', '.auto-fill-date button.selModalButton', function () {
-        console.info('on click date');
       });
       $(document).on('click', '.auto-fill-hour button.selModalButton', function () {
         console.info('on click hour');
         if (_isFirstClick(this)) {
-          $(_getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getHours()));
+          $(_getNeighborSelect(this)).selModalSetValue(zeroPadding2(new Date().getHours()));
           $(_getNeighborSelect(this)).change();
         }
       });
       $(document).on('click', '.auto-fill-minute button.selModalButton', function () {
         console.info('on click minute');
         if (_isFirstClick(this)) {
-          $(_getNeighborSelect(this)).selModalSetValue(zeroPadding2(dateNow.getMinutes()));
+          $(_getNeighborSelect(this)).selModalSetValue(zeroPadding2(new Date().getMinutes()));
           $(_getNeighborSelect(this)).change();
         }
       });
@@ -533,10 +516,12 @@
         const selectDate = p.find('.auto-fill-date select');
         const input = p.find('input');
         if ($(this).val()) {
-          // 各値です。
-          const yyyy = selectYear.val() || dateNow.getFullYear().toString();
-          const mm = selectMonth.val() || zeroPadding2(dateNow.getMonth() + 1);
-          const dd = selectDate.val() || zeroPadding2(dateNow.getDate());
+          // 各値です。 NOTE: 日付の境界をまたがないよう、現在日時は1回だけ取得します。
+          const now = new Date();
+          const yyyy = selectYear.val() || now.getFullYear().toString();
+          const mm = selectMonth.val() || zeroPadding2(now.getMonth() + 1);
+          // NOTE: 月を変えて日が存在しなくなった場合、月末に丸めます。
+          const dd = AutoFillDate.clampDate(yyyy, mm, selectDate.val() || now.getDate());
           selectYear.selModalSetValue(yyyy);
           selectMonth.selModalSetValue(mm);
           initializeAutoFillDateWithDayOfTheWeek(yyyy, mm, selectDate, dd);
@@ -558,8 +543,9 @@
         const input = p.find('input');
         if ($(this).val()) {
           // 各値です。
-          const yyyy = selectYear.val() || dateNow.getFullYear().toString();
-          const mm = selectMonth.val() || zeroPadding2(dateNow.getMonth() + 1);
+          const now = new Date();
+          const yyyy = selectYear.val() || now.getFullYear().toString();
+          const mm = selectMonth.val() || zeroPadding2(now.getMonth() + 1);
           selectYear.selModalSetValue(yyyy);
           selectMonth.selModalSetValue(mm);
           // hidden input を埋めます。
@@ -579,8 +565,9 @@
         const input = p.find('input');
         if ($(this).val()) {
           // 各値です。
-          const hh = selectHour.val() || zeroPadding2(dateNow.getHours());
-          const mm = selectMinute.val() || zeroPadding2(dateNow.getMinutes());
+          const now = new Date();
+          const hh = selectHour.val() || zeroPadding2(now.getHours());
+          const mm = selectMinute.val() || zeroPadding2(now.getMinutes());
           selectHour.selModalSetValue(hh);
           selectMinute.selModalSetValue(mm);
           // hidden input を埋めます。

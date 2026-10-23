@@ -1,70 +1,71 @@
 (function ($) {
+  'use strict';
+
+  // data 属性の値が name と一致する要素を返します。 name を CSS セレクタに埋め込まないためのヘルパーです。
+  var byData = function (key, name) {
+    return $('[data-' + key + ']').filter(function () {
+      return $(this).attr('data-' + key) === name;
+    });
+  };
 
   $.fn.selModal = function () {
 
     var SEL_PARENT = $(this);
 
-    SEL_PARENT.each(function (i) {
+    SEL_PARENT.each(function () {
 
       var select_this = $(this);
 
-      var sel_name_attr = $(this).attr('name');
+      var sel_name_attr = String($(this).attr('name'));
       var selected = $(this).prop('selectedIndex');
       var selected_name;
-      var modal_html = '';
-      var button_html = '';
       var sel_default_text = '';
 
-      $('[data-selmodal="' + sel_name_attr + '"]').remove();
-      $('[data-selmodalbtn="' + sel_name_attr + '"]').remove();
+      byData('selmodal', sel_name_attr).remove();
+      byData('selmodalbtn', sel_name_attr).remove();
 
       var aryChild = $(this).children();
 
-      modal_html += '<div class="selModal" data-selmodal="' + sel_name_attr + '">';
-      modal_html += '<div class="selModalOverlay selModalClose"></div>';
-      modal_html += '<div class="selModalInner">';
-      modal_html += '<div class="selModalHeader">';
-      modal_html += '<div class="selModalCloseIcon selModalClose"><span></span></div>';
-      modal_html += '</div>';
-
-      modal_html += '<div class="selModalList">';
-      modal_html += '<ul>';
+      // NOTE: option の文字列や属性を HTML として解釈しないよう、要素は text() と attr() で組み立てます。
+      var list = $('<ul>');
       for (var i = 0; i < aryChild.length; i++) {
-        var img_div = '';
+        var li = $('<li class="selModalClose">').attr('data-value', aryChild.eq(i).val());
         if (aryChild.eq(i).attr('data-image')) {
-          img_div = '<img src="' + aryChild.eq(i).attr('data-image') + '">';
+          li.append($('<img>').attr('src', aryChild.eq(i).attr('data-image')));
         }
-        if (selected != i) {
-          modal_html += '<li class="selModalClose" data-value="' + aryChild.eq(i).attr('value') + '">' + img_div + aryChild.eq(i).text() + '</li>';
-        } else {
-          modal_html += '<li class="selected selModalClose" data-value="' + aryChild.eq(i).attr('value') + '">' + img_div + aryChild.eq(i).text() + '</li>';
+        li.append(document.createTextNode(aryChild.eq(i).text()));
+        if (selected == i) {
+          li.addClass('selected');
           selected_name = aryChild.eq(i).text();
         }
+        list.append(li);
       }
-      modal_html += '</ul>';
-      modal_html += '</div>';
-      modal_html += '</div>';
+      var modal = $('<div class="selModal">').attr('data-selmodal', sel_name_attr).append(
+        $('<div class="selModalOverlay selModalClose">'),
+        $('<div class="selModalInner">').append(
+          $('<div class="selModalHeader">').append($('<div class="selModalCloseIcon selModalClose"><span></span></div>')),
+          $('<div class="selModalList">').append(list)
+        )
+      );
 
-      if (selected_name === undefined) {
-        button_html = '<button type="button" class="selModalButton form-control" data-selmodalbtn="' + sel_name_attr + '">' + sel_default_text + '</button>';
-      } else {
-        button_html = '<button type="button" class="selModalButton form-control" data-selmodalbtn="' + sel_name_attr + '">' + selected_name + '</button>';
-      }
+      var button = $('<button type="button" class="selModalButton form-control">')
+        .attr('data-selmodalbtn', sel_name_attr)
+        .text(selected_name === undefined ? sel_default_text : selected_name);
 
       // 元のセレクトボックスは非表示
       $(this).hide();
       //ボタン生成
-      $(this).after(button_html);
+      $(this).after(button);
       //モーダルウインドウ生成
-      $('body').append(modal_html);
+      $('body').append(modal);
 
       //ボタンクリック
-      $('[data-selmodalbtn="' + sel_name_attr + '"]').click(function () {
+      button.click(function () {
 
         $(this).openSelModal();
       });
 
-      $('[data-selmodal="' + sel_name_attr + '"]').find('.selModalList').on('touchstart', function () {
+      modal.find('.selModalList').on('touchstart', function () {
         if ($(this).scrollTop() == 0) {
           $(this).scrollTop(1);
         }
@@ -75,29 +76,28 @@
         }
       });
 
-      $('[data-selmodal="' + sel_name_attr + '"]').find('.selModalList li').on('touchstart', function () {
+      modal.find('.selModalList li').on('touchstart', function () {
         $(this).addClass('totch');
       });
 
-      $('[data-selmodal="' + sel_name_attr + '"]').find('.selModalList li').on('touchend', function () {
+      modal.find('.selModalList li').on('touchend', function () {
         $(this).closest('ul').find('li').removeClass('totch');
       });
 
       //ボタンクリック
-      $('[data-selmodal="' + sel_name_attr + '"]').find('li').click(function () {
+      modal.find('li').click(function () {
         $(this).closest('ul').find('li').removeClass('selected');
         $(this).addClass('selected');
-        var hoge = $(this).closest('.selModal').data('selmodal');
         var this_no = $(this).closest('ul').find('li').index(this);
-        var before_no = $('select[name="' + hoge + '"]').prop("selectedIndex");
-        $('select[name="' + hoge + '"]').prop("selectedIndex", this_no);
-        $('[data-selmodalbtn="' + hoge + '"]').text($(this).text());
+        var before_no = select_this.prop("selectedIndex");
+        select_this.prop("selectedIndex", this_no);
+        button.text($(this).text());
         if (this_no != before_no) {
           select_this.trigger('change');
         }
       });
 
-      $('[data-selmodal="' + sel_name_attr + '"]').find('.selModalClose').click(function () {
+      modal.find('.selModalClose').click(function () {
         $(this).parents(".selModal").hide();
         $('body').removeClass('selModalBody');
       });
@@ -109,16 +109,18 @@
     sel_dom.val(value);
     var sel_text = $(sel_dom).find('option:selected').text();
     var name = sel_dom.attr('name');
-    var sel_list = $('[data-selmodal="' + name + '"]');
-    var sel_btn = $('[data-selmodalbtn="' + name + '"]');
+    var sel_list = byData('selmodal', name);
+    var sel_btn = byData('selmodalbtn', name);
 
     sel_list.find('li').removeClass('selected');
-    sel_list.find('[data-value="' + value + '"]').addClass('selected');
+    sel_list.find('li').filter(function () {
+      return $(this).attr('data-value') === String(value);
+    }).addClass('selected');
     sel_btn.text(sel_text);
   }
 
   $.fn.openSelModal = function () {
-    href = $('[data-selmodal="' + $(this).data('selmodalbtn') + '"]');
+    var href = byData('selmodal', $(this).attr('data-selmodalbtn'));
 
     $(href).show();
     $('body').addClass('selModalBody');
