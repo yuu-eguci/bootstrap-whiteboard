@@ -108,7 +108,7 @@
     var sel_dom = $(this);
     sel_dom.val(value);
     var sel_text = $(sel_dom).find('option:selected').text();
-    var name = sel_dom.attr('name');
+    var name = String(sel_dom.attr('name'));
     var sel_list = byData('selmodal', name);
     var sel_btn = byData('selmodalbtn', name);
 

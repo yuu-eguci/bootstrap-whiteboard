@@ -89,6 +89,18 @@ test.describe('selModal プラグイン', () => {
     expect(await page.evaluate(() => window.__xss)).toBeUndefined();
   });
 
+  test('name のない select でも selModalSetValue がボタンに反映されます', async ({ page }) => {
+    const text = await page.evaluate(() => {
+      const select = document.createElement('select');
+      select.append(new Option('', ''), new Option('Value 1', 'v1'));
+      document.body.append(select);
+      window.jQuery(select).selModal();
+      window.jQuery(select).selModalSetValue('v1');
+      return window.jQuery(select).next('button.selModalButton').text();
+    });
+    expect(text).toBe('Value 1');
+  });
+
   test('name に引用符を含んでも動作します', async ({ page }) => {
     await addSelect(page, 'quote"name', 'v1', 'Value 1');
     const btn = page.locator('button.selModalButton').last();
