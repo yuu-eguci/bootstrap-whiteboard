@@ -1,0 +1,13 @@
+# GitHub Pages (Jekyll) で公開しない、開発用のファイルです。
+# 公開するデモページ (*.html, css/, js/) と README は対象外にしません。
+exclude:
+  - Dockerfile
+  - eslint.config.mjs
+  - node_modules/
+  - package.json
+  - package-lock.json
+  - playwright.config.js
+  - playwright-report/
+  - scripts/
+  - test-results/
+  - tests/
