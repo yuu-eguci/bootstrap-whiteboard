@@ -1,11 +1,10 @@
-'use strict';
-const { test, expect } = require('./fixtures.js');
+import { test, expect, type Locator, type Page } from './fixtures.ts';
 
 // 2026-10-23 (金) 10:15 に固定します。
 const NOW = new Date('2026-10-23T10:15:00+09:00');
 
-const group = (page, label) => page.locator('.form-group').filter({ has: page.getByText(label, { exact: true }) });
-const optionValues = (select) => select.locator('option').evaluateAll((els) => els.map((el) => el.value));
+const group = (page: Page, label: string) => page.locator('.form-group').filter({ has: page.getByText(label, { exact: true }) });
+const optionValues = (select: Locator) => select.locator('option').evaluateAll((els) => els.map((el) => (el as HTMLOptionElement).value));
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(NOW);

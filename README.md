@@ -6,13 +6,14 @@ Bootstrap 4.5.1 の挙動を GitHub Pages 上で試すための静的ページ�
 
 - Docker: 対応!
 - Node.js: 26.13.1 (LTS) / npm 11.20.0
+- TypeScript: 6.0.3 (ビルドは esbuild 0.28.2)
 - Linter: ESLint 10.15.0
 - Test: node:test / Playwright 1.65.1
 - Bootstrap: 4.5.1
 
 ## パッと実行してみたい
 
-Docker で lint とテストを実行できます。
+Docker で lint 、型チェック、テストを実行できます。
 イメージのビルドにはネットワークが必要です。テストの実行には不要です。
 
 ```bash
@@ -59,8 +60,26 @@ CDN から読み込み、すべてに SRI (`integrity`) を付けています。
 - devDependencies の同名パッケージも、 CDN と同じバージョンに固定しています (下記「開発」を参照してください) 。
 - `js/Jquery.selmodal.js` と `css/selmodal.css` は、取得元とライセンスの記録がリポジトリ内にありません。
 - `js/Jquery.selmodal.js` には、 HTML 文字列連結をやめる修正を加えています。
+- `js/Jquery.selmodal.js` は外部由来のため TypeScript へ移行せず、 JavaScript のままにしています。型は `src/types/globals.d.ts` で宣言しています。
 
 ## 開発
+
+### ソースと生成物
+
+ページが読み込む自作の JavaScript は、 `src/*.ts` から `npm run build` (esbuild) で生成します。
+GitHub Pages はビルドせずに公開するため、生成した `js/*.js` もコミットします。
+
+| ソース | 生成物 | 読み込むページ |
+| --- | --- | --- |
+| `src/auto-fill-date.ts` | `js/auto-fill-date.js` (グローバル変数 `AutoFillDate`) | `4.5.1-selmodal.html` |
+| `src/selmodal-page.ts` | `js/selmodal-page.js` | `4.5.1-selmodal.html` |
+| `src/selectbox-page.ts` | `js/selectbox-page.js` | `4.5.1-selectbox.html` |
+
+- `src/` を変更したら `npm run build` を実行し、 `js/` の変更もコミットします。生成物が古いと単体テストが失敗します。
+- テスト、 Playwright 設定、開発用スクリプトも TypeScript です。 Node.js が型注釈を取り除いて直接実行します。
+- `eslint.config.mjs` は JavaScript のままです。 ESLint で TypeScript の設定ファイルを読むには jiti が別途必要なためです。
+
+### 環境とテスト
 
 - Node.js 26.13.1 (LTS) と、同梱の npm を使います。バージョンは `.nvmrc` にあります。
 - `.nvmrc` 、 `package.json` の `engines` 、 Dockerfile のベースイメージは、単体テストで一致を確認しています。
@@ -73,17 +92,20 @@ CDN から読み込み、すべてに SRI (`integrity`) を付けています。
 npm ci
 npx playwright install --with-deps chromium
 npm run lint
+npm run typecheck
 npm test
 ```
 
 | コマンド | 内容 |
 | --- | --- |
-| `npm run lint` | ESLint (HTML 内のインライン script も対象) |
-| `npm run test:unit` | `node --test` による単体テスト (日付計算、 SRI とパッケージのファイルの一致、 Node.js のバージョン指定) |
+| `npm run build` | `src/*.ts` から `js/*.js` を生成 |
+| `npm run lint` | ESLint (TypeScript と `js/Jquery.selmodal.js`) |
+| `npm run typecheck` | `tsc` による型チェック (Node.js 用の `tsconfig.json` と、ブラウザ用の `src/tsconfig.json`) |
+| `npm run test:unit` | `node --test` による単体テスト (日付計算、 SRI とパッケージのファイルの一致、 Node.js のバージョン指定、生成物と `src/` の一致) |
 | `npm run test:e2e` | Playwright (Chromium) によるブラウザテスト |
 | `npm test` | 単体テストとブラウザテスト |
 
 ## CI
 
-- `.github/workflows/ci.yml` が `master` への push と pull request で lint 、単体テスト、ブラウザテスト、 Docker テストを実行します。
+- `.github/workflows/ci.yml` が `master` への push と pull request で lint 、型チェック、単体テスト、ブラウザテスト、 Docker テストを実行します。
 - GitHub Pages への公開は CI と連動していません。

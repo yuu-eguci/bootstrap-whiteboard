@@ -1,9 +1,8 @@
-'use strict';
-const { defineConfig, devices } = require('@playwright/test');
+import { defineConfig, devices } from '@playwright/test';
 
 const port = 4173;
 
-module.exports = defineConfig({
+export default defineConfig({
   testDir: 'tests/e2e',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -16,7 +15,7 @@ module.exports = defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'node scripts/serve.mjs',
+    command: 'node scripts/serve.ts',
     url: `http://127.0.0.1:${port}/`,
     env: { PORT: String(port) },
     reuseExistingServer: !process.env.CI,

@@ -1,0 +1,19 @@
+{
+  // Node.js で動かすファイル (テスト、開発用スクリプト、設定) の型チェック設定です。
+  // Node.js は型注釈を取り除いて直接実行するため、 tsc は型チェックだけを行います。
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node", "jquery"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["tests", "scripts", "src/types", "*.config.ts"]
+}

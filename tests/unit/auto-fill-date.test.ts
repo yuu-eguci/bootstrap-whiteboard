@@ -1,7 +1,6 @@
-'use strict';
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const AutoFillDate = require('../../js/auto-fill-date.js');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as AutoFillDate from '../../src/auto-fill-date.ts';
 
 test('zeroPadding2 は2桁にゼロ埋めします', () => {
   assert.equal(AutoFillDate.zeroPadding2(3), '03');
