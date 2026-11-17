@@ -36,10 +36,11 @@ const fulfillFromNodeModules = async function (route: Route) {
 };
 
 export const test = base.extend({
-  context: async ({ context }, use) => {
+  context: async ({ context, baseURL }, use) => {
     if (!process.env.LIVE_CDN) {
-      // ローカルサーバ以外へのリクエストはすべてここで処理します。
-      await context.route((url) => url.hostname !== '127.0.0.1', fulfillFromNodeModules);
+      // テスト対象のサーバ (baseURL) 以外へのリクエストはすべてここで処理します。
+      const origin = new URL(baseURL ?? '').origin;
+      await context.route((url) => url.origin !== origin, fulfillFromNodeModules);
     }
     await use(context);
   },

@@ -1,0 +1,42 @@
+# Docker だけで、ページのビルド・起動とテストを行うための設定です。手順は README を参照してください。
+name: bootstrap-whiteboard
+
+services:
+  # src/*.ts をビルドし、公開するファイルを http://127.0.0.1:8080/ で配信します。
+  web:
+    build:
+      context: .
+      target: web
+    image: bootstrap-whiteboard-web
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:8080"
+    networks: [default, internal]
+
+  # lint 、型チェック、単体テスト、ブラウザテストを実行します。
+  test:
+    build:
+      context: .
+      target: test
+    image: bootstrap-whiteboard-test
+    networks: [internal]
+    profiles: [test]
+
+  # 起動中の web に対してブラウザテストを実行します。 CDN へのリクエストは node_modules のファイルで応答します。
+  e2e:
+    build:
+      context: .
+      target: test
+    image: bootstrap-whiteboard-test
+    environment:
+      BASE_URL: http://web:8080
+    command: ["npx", "playwright", "test"]
+    depends_on:
+      web:
+        condition: service_healthy
+    networks: [internal]
+    profiles: [test]
+
+networks:
+  # テスト用コンテナはインターネットに出られないネットワークだけにつなぎます。
+  internal:
+    internal: true

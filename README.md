@@ -13,19 +13,34 @@ Bootstrap 4.5.1 の挙動を GitHub Pages 上で試すための静的ページ�
 
 ## パッと実行してみたい
 
-Docker で lint 、型チェック、テストを実行できます。
-イメージのビルドにはネットワークが必要です。テストの実行には不要です。
+Docker (Compose を含みます) だけで、ページのビルド・起動とテストができます。 Node.js は不要です。
+イメージのビルドにはネットワークが必要です。
 
 ```bash
-docker build -t bootstrap-whiteboard-test .
-docker run --rm --network none bootstrap-whiteboard-test
+# src/*.ts をビルドしてページを起動します。 http://127.0.0.1:8080/ を開いてください。
+docker compose up --build -d --wait web
+
+# lint 、型チェック、単体テスト、ブラウザテストを実行します。
+docker compose run --rm --build test
+
+# 起動中の web に対してブラウザテストを実行します。
+docker compose run --rm e2e
+
+# 停止して、コンテナとネットワークを削除します。
+docker compose --profile test down
 ```
+
+- ポートを変えるときは `WEB_PORT=8081 docker compose up --build -d --wait web` のように指定します。
+- web コンテナは GitHub Pages で公開するファイル (`*.html` 、 `css/` 、 `js/`) だけを配信します。
+- ページは Bootstrap などを CDN から読み込むため、ブラウザで開くときはインターネット接続が必要です。
+- テスト用のコンテナはインターネットに出られないネットワーク (`internal`) だけにつなぎます。 CDN へのリクエストは、 devDependencies の同じバージョンのパッケージのファイルで応答します (下記「開発」を参照してください) 。
+- Compose を使わずに、 `docker build -t bootstrap-whiteboard-test .` と `docker run --rm --network none bootstrap-whiteboard-test` でテストだけ実行することもできます。
 
 ## GitHub Pages
 
 - https://yuu-eguci.github.io/bootstrap-whiteboard/
 - `master` ブランチのルートを Jekyll で公開しています。
-- 開発用のファイル (テスト、設定、 Dockerfile など) は `_config.yml` の `exclude` で公開対象から外しています。
+- 開発用のファイル (テスト、設定、 Dockerfile 、 `compose.yaml` など) は `_config.yml` の `exclude` で公開対象から外しています。
 
 ## ページ一覧
 
@@ -101,11 +116,13 @@ npm test
 | `npm run build` | `src/*.ts` から `js/*.js` を生成 |
 | `npm run lint` | ESLint (TypeScript と `js/Jquery.selmodal.js`) |
 | `npm run typecheck` | `tsc` による型チェック (Node.js 用の `tsconfig.json` と、ブラウザ用の `src/tsconfig.json`) |
-| `npm run test:unit` | `node --test` による単体テスト (日付計算、 SRI とパッケージのファイルの一致、 Node.js のバージョン指定、生成物と `src/` の一致) |
-| `npm run test:e2e` | Playwright (Chromium) によるブラウザテスト |
+| `npm run test:unit` | `node --test` による単体テスト (日付計算、 SRI とパッケージのファイルの一致、 Node.js のバージョン指定、生成物と `src/` の一致、静的ファイルサーバ) |
+| `npm run serve` | `scripts/serve.ts` でリポジトリ直下を http://127.0.0.1:4173/ に配信 (`HOST` 、 `PORT` 、 `SITE_DIR` で変更できます) |
+| `npm run test:e2e` | Playwright (Chromium) によるブラウザテスト (`BASE_URL` を指定すると起動中のサーバが対象) |
 | `npm test` | 単体テストとブラウザテスト |
 
 ## CI
 
-- `.github/workflows/ci.yml` が `master` への push と pull request で lint 、型チェック、単体テスト、ブラウザテスト、 Docker テストを実行します。
+- `.github/workflows/ci.yml` が `master` への push と pull request で lint 、型チェック、単体テスト、ブラウザテストを実行します。
+- Docker ジョブでは、 Compose でのテスト、 web の起動、 HTTP 応答の確認、起動中の web に対するブラウザテストを実行します。
 - GitHub Pages への公開は CI と連動していません。
