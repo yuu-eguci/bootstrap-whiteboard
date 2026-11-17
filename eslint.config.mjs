@@ -1,32 +1,20 @@
+// ESLint で TypeScript の設定ファイルを読むには jiti が別途必要なため、この設定は JavaScript のままにしています。
 import js from '@eslint/js';
-import html from 'eslint-plugin-html';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
-export default [
-  { ignores: ['node_modules/', 'test-results/', 'playwright-report/', '_site/'] },
+export default defineConfig([
+  // js/ のうち、 src/*.ts から生成するファイルは対象外です。
+  globalIgnores(['node_modules/', 'test-results/', 'playwright-report/', '_site/',
+    'js/auto-fill-date.js', 'js/selmodal-page.js', 'js/selectbox-page.js']),
   js.configs.recommended,
   {
-    files: ['js/**/*.js'],
-    languageOptions: {
-      sourceType: 'script',
-      globals: { ...globals.browser, jQuery: 'readonly', module: 'writable' },
-    },
+    // 外部由来の jQuery プラグインです。 TypeScript へ移行せず、 JavaScript のまま lint します。
+    files: ['js/Jquery.selmodal.js'],
+    languageOptions: { sourceType: 'script', globals: { ...globals.browser, jQuery: 'readonly' } },
   },
-  {
-    // HTML 内のインライン script です。各ページは jQuery と js/ 配下のスクリプトを読み込みます。
-    files: ['**/*.html'],
-    plugins: { html },
-    languageOptions: {
-      sourceType: 'script',
-      globals: { ...globals.browser, $: 'readonly', jQuery: 'readonly', AutoFillDate: 'readonly' },
-    },
-  },
-  {
-    files: ['tests/**/*.js', 'playwright.config.js'],
-    languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.browser } },
-  },
-  {
-    files: ['scripts/**/*.mjs', 'eslint.config.mjs'],
-    languageOptions: { sourceType: 'module', globals: globals.node },
-  },
-];
+  { files: ['**/*.ts'], extends: [tseslint.configs.recommended] },
+  { files: ['src/**/*.ts'], languageOptions: { globals: globals.browser } },
+  { files: ['tests/**/*.ts', 'scripts/**/*.ts', '*.config.ts', 'eslint.config.mjs'], languageOptions: { globals: globals.node } },
+]);

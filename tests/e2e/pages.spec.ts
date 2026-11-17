@@ -1,9 +1,8 @@
-'use strict';
-const { test, expect } = require('./fixtures.js');
+import { test, expect } from './fixtures.ts';
 
 for (const path of ['/', '/4.5.1.html', '/4.5.1-selectbox.html', '/4.5.1-selmodal.html']) {
   test(`${path} は JavaScript エラーなく表示されます`, async ({ page }) => {
-    const errors = [];
+    const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await page.goto(path);

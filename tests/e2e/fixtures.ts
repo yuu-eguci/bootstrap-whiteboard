@@ -1,16 +1,20 @@
-'use strict';
 // CDN へのリクエストを node_modules のファイルで応答し、ネットワークなしでテストできるようにします。
 // 応答するファイルは CDN と同じバイト列なので、ブラウザによる SRI 検証もそのまま行われます。
 // LIVE_CDN=1 のときは実際の CDN を使います。
-const base = require('@playwright/test');
-const fs = require('node:fs');
-const path = require('node:path');
+import { test as base, type Route } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+import { resolveCdnUrl, localPath } from '../cdn-map.ts';
 
-const { resolveCdnUrl, localPath } = require('../cdn-map.js');
+const types: Record<string, string> = {
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+};
 
-const types = { '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf' };
-
-const fulfillFromNodeModules = async function (route) {
+const fulfillFromNodeModules = async function (route: Route) {
   const target = resolveCdnUrl(route.request().url());
   if (!target) {
     return route.abort('blockedbyclient');
@@ -31,7 +35,7 @@ const fulfillFromNodeModules = async function (route) {
   });
 };
 
-exports.test = base.test.extend({
+export const test = base.extend({
   context: async ({ context }, use) => {
     if (!process.env.LIVE_CDN) {
       // ローカルサーバ以外へのリクエストはすべてここで処理します。
@@ -40,4 +44,4 @@ exports.test = base.test.extend({
     await use(context);
   },
 });
-exports.expect = base.expect;
+export { expect, type Locator, type Page } from '@playwright/test';

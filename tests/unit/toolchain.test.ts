@@ -1,12 +1,11 @@
-'use strict';
 // Node.js のバージョン指定が、ファイル間と実行環境でずれていないことを確認します。
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const root = path.join(__dirname, '..', '..');
-const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
+const root = path.join(import.meta.dirname, '..', '..');
+const read = (file: string) => fs.readFileSync(path.join(root, file), 'utf8');
 const nvmrc = read('.nvmrc').trim();
 const major = nvmrc.split('.')[0];
 

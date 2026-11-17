@@ -1,13 +1,12 @@
-'use strict';
-const { test, expect } = require('./fixtures.js');
+import { test, expect, type Locator, type Page } from './fixtures.ts';
 
 // 2026-10-23 (金) 10:15 に固定します。
 const NOW = new Date('2026-10-23T10:15:00+09:00');
 
-const group = (page, label) => page.locator('.form-group').filter({ has: page.getByText(label, { exact: true }) });
-const button = (g, part) => g.locator(`.auto-fill-${part} button.selModalButton`);
-const openModal = (page) => page.locator('.selModal').filter({ visible: true });
-const chooseOption = (page, text) => openModal(page).locator('li').filter({ hasText: new RegExp(`^${text}$`) }).click();
+const group = (page: Page, label: string) => page.locator('.form-group').filter({ has: page.getByText(label, { exact: true }) });
+const button = (g: Locator, part: string) => g.locator(`.auto-fill-${part} button.selModalButton`);
+const openModal = (page: Page) => page.locator('.selModal').filter({ visible: true });
+const chooseOption = (page: Page, text: string) => openModal(page).locator('li').filter({ hasText: new RegExp(`^${text}$`) }).click();
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(NOW);
@@ -55,7 +54,7 @@ test('月を変えて日が存在しなくなった場合、月末に丸めま�
 });
 
 test('select の name とモーダルは重複しません', async ({ page }) => {
-  const names = await page.locator('select').evaluateAll((els) => els.map((el) => el.name));
+  const names = await page.locator('select').evaluateAll((els) => els.map((el) => (el as HTMLSelectElement).name));
   expect(names).toHaveLength(21);
   expect(new Set(names).size).toBe(21);
   await expect(page.locator('.selModal')).toHaveCount(21);
@@ -72,12 +71,12 @@ test('disabled の入力欄に対応するボタンは disabled です', async (
 });
 
 test.describe('selModal プラグイン', () => {
-  const addSelect = (page, name, value, text) => page.evaluate(([n, v, t]) => {
+  const addSelect = (page: Page, name: string, value: string, text: string) => page.evaluate(([n, v, t]) => {
     const select = document.createElement('select');
     select.name = n;
     select.append(new Option('', ''), new Option(t, v));
     document.body.append(select);
-    window.jQuery(select).selModal();
+    jQuery(select).selModal();
   }, [name, value, text]);
 
   test('option の文字列を HTML として解釈しません', async ({ page }) => {
@@ -86,7 +85,7 @@ test.describe('selModal プラグイン', () => {
     const modal = page.locator('.selModal[data-selmodal="xss-test"]');
     await expect(modal.locator('img')).toHaveCount(0);
     await expect(modal.locator('li').nth(1)).toHaveText(payload);
-    expect(await page.evaluate(() => window.__xss)).toBeUndefined();
+    expect(await page.evaluate(() => (window as Window & { __xss?: number }).__xss)).toBeUndefined();
   });
 
   test('name のない select でも selModalSetValue がボタンに反映されます', async ({ page }) => {
@@ -94,9 +93,9 @@ test.describe('selModal プラグイン', () => {
       const select = document.createElement('select');
       select.append(new Option('', ''), new Option('Value 1', 'v1'));
       document.body.append(select);
-      window.jQuery(select).selModal();
-      window.jQuery(select).selModalSetValue('v1');
-      return window.jQuery(select).next('button.selModalButton').text();
+      jQuery(select).selModal();
+      jQuery(select).selModalSetValue('v1');
+      return jQuery(select).next('button.selModalButton').text();
     });
     expect(text).toBe('Value 1');
   });
@@ -107,6 +106,6 @@ test.describe('selModal プラグイン', () => {
     await btn.click();
     await chooseOption(page, 'Value 1');
     await expect(btn).toHaveText('Value 1');
-    expect(await page.evaluate(() => document.querySelector('select[name="quote\\"name"]').value)).toBe('v1');
+    expect(await page.evaluate(() => document.querySelector<HTMLSelectElement>('select[name="quote\\"name"]')?.value)).toBe('v1');
   });
 });

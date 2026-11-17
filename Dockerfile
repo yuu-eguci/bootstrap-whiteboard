@@ -1,4 +1,4 @@
-# lint と単体テスト、ブラウザテストを実行するイメージです。
+# lint 、型チェック、単体テスト、ブラウザテストを実行するイメージです。
 FROM node:26.13.1-bookworm-slim@sha256:5df79989ed685e09f0a98019db4cebfb22fb9df1a53c0161664a011f7ff6b0f1
 
 ENV CI=1 \
@@ -15,4 +15,4 @@ RUN npm ci \
 COPY --chown=node:node . .
 USER node
 
-CMD ["sh", "-c", "npm run lint && npm test"]
+CMD ["sh", "-c", "npm run lint && npm run typecheck && npm test"]
