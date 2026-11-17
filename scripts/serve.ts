@@ -1,10 +1,13 @@
-// テスト用の静的ファイルサーバです。リポジトリ直下だけを配信します。
+// 静的ファイルサーバです。テストと、 Docker の web イメージで使います。
+// SITE_DIR (既定はリポジトリ直下) だけを配信します。
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { extname, join, normalize, sep } from 'node:path';
+import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
+const root = process.env.SITE_DIR ? join(resolve(process.env.SITE_DIR), sep) : fileURLToPath(new URL('..', import.meta.url));
+// Docker では HOST=0.0.0.0 にして、コンテナの外から接続できるようにします。
+const host = process.env.HOST || '127.0.0.1';
 const port = Number(process.env.PORT || 4173);
 const types: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -32,6 +35,6 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404).end();
   }
-}).listen(port, '127.0.0.1', () => {
-  console.log(`http://127.0.0.1:${port}/`);
+}).listen(port, host, () => {
+  console.log(`http://${host}:${port}/`);
 });

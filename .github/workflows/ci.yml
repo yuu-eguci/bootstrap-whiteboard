@@ -44,5 +44,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: docker build -t bootstrap-whiteboard-test .
-      - run: docker run --rm --network none bootstrap-whiteboard-test
+      - run: docker compose --profile test build
+      - run: docker compose run --rm test
+      - run: docker compose up -d --wait web
+      # 公開するファイルは 200 、開発用のファイルは配信しないことを確認します。
+      - run: |
+          for path in / /4.5.1.html /4.5.1-selectbox.html /4.5.1-selmodal.html /js/selmodal-page.js /css/selmodal.css; do
+            test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$path")" = 200
+          done
+          for path in /package.json /src/auto-fill-date.ts /scripts/serve.ts; do
+            test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$path")" = 404
+          done
+      - run: docker compose run --rm e2e
+      - if: always()
+        run: docker compose --profile test down
