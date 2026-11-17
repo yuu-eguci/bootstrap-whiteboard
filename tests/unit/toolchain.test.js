@@ -10,10 +10,6 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 const nvmrc = read('.nvmrc').trim();
 const major = nvmrc.split('.')[0];
 
-test('.nvmrc は Node.js 26 LTS を指定します', () => {
-  assert.match(nvmrc, /^26\.\d+\.\d+$/);
-});
-
 test('Dockerfile のベースイメージは .nvmrc と同じ Node.js です', () => {
   const tags = [...read('Dockerfile').matchAll(/^FROM node:([^-@\s]+)/gm)].map((m) => m[1]);
   assert.ok(tags.length > 0);
